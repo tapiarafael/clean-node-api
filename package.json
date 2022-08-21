@@ -4,8 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "jest --coverage false --passWithNoTests",
-    "test:watch": "jest --coverage false --watchAll",
+    "test": "jest --coverage false --passWithNoTests --watchAll",
     "test:staged": "jest -o --passWithNoTests",
     "prepare": "husky install"
   },
