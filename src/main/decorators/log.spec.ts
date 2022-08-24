@@ -6,7 +6,7 @@ interface sutTypes {
   controllerStub: Controller
 }
 
-const makeControllerStub = (): Controller => {
+const makeController = (): Controller => {
   class ControllerStub implements Controller {
     async handle (httpRequest: HttpRequest): Promise<HttpResponse> {
       const httpResponse: HttpResponse = { statusCode: 200, body: { ok: true } }
@@ -17,7 +17,7 @@ const makeControllerStub = (): Controller => {
 }
 
 const makeSut = (): sutTypes => {
-  const controllerStub = makeControllerStub()
+  const controllerStub = makeController()
   const sut = new LogControllerDecorator(controllerStub)
 
   return { sut, controllerStub }
@@ -37,5 +37,22 @@ describe('LogController Decorator', () => {
     }
     await sut.handle(httpRequest)
     expect(handleSpy).toHaveBeenCalledWith(httpRequest)
+  })
+
+  test('Should return the same result of the controller', async () => {
+    const { sut } = makeSut()
+    const httpRequest: HttpRequest = {
+      body: {
+        name: 'any_name',
+        email: 'any_email@email.com',
+        password: 'any_pass',
+        passwordConfirmation: 'any_pass'
+      }
+    }
+    const response = await sut.handle(httpRequest)
+    expect(response).toEqual({
+      statusCode: 200,
+      body: { ok: true }
+    })
   })
 })
