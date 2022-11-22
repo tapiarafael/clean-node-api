@@ -33,7 +33,7 @@ describe('ValidationComposite', () => {
     expect(error).toEqual(new MissingParamError('field'))
   })
 
-  test('Should not return all validation passes', () => {
+  test('Should not return if all validation passes', () => {
     const { sut, validationStub } = makeSut()
     jest.spyOn(validationStub, 'validate').mockReturnValueOnce(undefined)
     const error = sut.validate({ field: 'any_value' })
