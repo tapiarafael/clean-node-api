@@ -1,43 +1,57 @@
-import { MissingParamError } from '../../errors'
+import { InvalidParamError, MissingParamError } from '../../errors'
 import { Validation } from './validation'
 import { ValidationComposite } from './validation-composite'
 
 interface SutType {
   sut: ValidationComposite
-  validationStub: Validation
+  validationStubs: Validation[]
 }
 
 const makeValidation = (): Validation => {
   class ValidationStub implements Validation {
     validate (input: any): Error | undefined {
-      return new MissingParamError('field')
+      return undefined
     }
   }
   return new ValidationStub()
 }
 const makeSut = (): SutType => {
-  const validationStub = makeValidation()
-  const sut = new ValidationComposite([validationStub])
+  const validationStubs = [
+    makeValidation(),
+    makeValidation()
+  ]
+  const sut = new ValidationComposite(validationStubs)
 
   return {
     sut,
-    validationStub
+    validationStubs
   }
 }
 
 describe('ValidationComposite', () => {
   test('Should return an error if any validation fails', () => {
-    const { sut } = makeSut()
+    const { sut, validationStubs } = makeSut()
+    const [missingParamValidation] = validationStubs
+    jest.spyOn(missingParamValidation, 'validate').mockReturnValueOnce(new MissingParamError('field'))
     const error = sut.validate({ field: 'any_value' })
 
     expect(error).toEqual(new MissingParamError('field'))
   })
 
-  test('Should not return if all validation passes', () => {
-    const { sut, validationStub } = makeSut()
-    jest.spyOn(validationStub, 'validate').mockReturnValueOnce(undefined)
-    const error = sut.validate({ field: 'any_value' })
+  test('Should return the first error if more than one validation fails', () => {
+    const { sut, validationStubs } = makeSut()
+    const [invalidParamError, missingParamValidation] = validationStubs
+    jest.spyOn(invalidParamError, 'validate').mockReturnValueOnce(new InvalidParamError('field'))
+    jest.spyOn(missingParamValidation, 'validate').mockReturnValueOnce(new MissingParamError('field'))
 
+    const error = sut.validate({ field: 'any_value' })
+    expect(error).toEqual(new InvalidParamError('field'))
+  })
+
+  test('Should return undefined if all validation passes', () => {
+    const { sut } = makeSut()
+
+    const error = sut.validate({ field: 'any_value' })
     expect(error).toBeUndefined()
   })
 })
